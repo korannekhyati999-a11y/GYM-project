@@ -24,7 +24,7 @@ const TrainerDashboard = () => {
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-dark)' }}>
       {/* Sidebar */}
       <aside style={{ width: '280px', background: 'var(--bg-card)', padding: '30px', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-        <h2 className="logo text-accent" style={{ marginBottom: '40px' }}>SUMMIT <span style={{ fontSize: '1rem', color: '#fff', fontWeight: 500 }}>PRO</span></h2>
+        <h2 className="logo text-accent" style={{ marginBottom: '40px' }}>SKYFIT <span style={{ fontSize: '1rem', color: '#fff', fontWeight: 500 }}>PRO</span></h2>
         
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <button 

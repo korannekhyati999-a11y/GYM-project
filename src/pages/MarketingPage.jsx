@@ -76,7 +76,7 @@ const MarketingPage = () => {
       {/* Navigation */}
       <nav className="navbar scrolled">
         <div className="container nav-container">
-          <div className="logo text-accent">SUMMIT</div>
+          <div className="logo text-accent">SKYFIT</div>
           <div className="nav-links">
             <a href="#about">About</a>
             <a href="#equipment">Equipment</a>
@@ -90,7 +90,7 @@ const MarketingPage = () => {
       <section className="hero-section" ref={heroRef}>
         <div className="hero-overlay"></div>
         <img 
-          src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop" 
+          src="/images/media__1775286648656.jpg" 
           alt="Gym Background" 
           className="hero-bg-video"
         />
@@ -121,21 +121,21 @@ const MarketingPage = () => {
           <h2 className="section-title">Elite <span className="text-accent">Arsenal</span></h2>
           <div className="equip-grid">
             <div className="equip-card">
-              <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&q=80&w=800" className="equip-card-img" alt="Cardio" />
+              <img src="/images/media__1775286648896.jpg" className="equip-card-img" alt="Cardio" />
               <div className="equip-card-content">
                 <h3>Cardio Matrix</h3>
                 <p className="text-secondary mt-2">Next-gen treadmills and ellipticals with immersive displays.</p>
               </div>
             </div>
             <div className="equip-card">
-              <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=800" className="equip-card-img" alt="Weights" />
+              <img src="/images/media__1775286648989.jpg" className="equip-card-img" alt="Weights" />
               <div className="equip-card-content">
                 <h3>Free Weights Area</h3>
                 <p className="text-secondary mt-2">Premium urethane dumbbells and competitive lifting platforms.</p>
               </div>
             </div>
             <div className="equip-card">
-              <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800" className="equip-card-img" alt="Machines" />
+              <img src="/images/media__1775286649010.jpg" className="equip-card-img" alt="Machines" />
               <div className="equip-card-content">
                 <h3>Selectorized Machines</h3>
                 <p className="text-secondary mt-2">Biomechanically precise isolation tracking machines.</p>

@@ -1,0 +1,140 @@
+name: Release Builds (Signed)
+
+# Only triggered manually from the GitHub Actions UI
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version name (e.g. 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  # ── Signed Android release APK ────────────────────────────────────────────
+  android-release:
+    name: Android Signed APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Sync Capacitor → Android
+        run: npx cap sync android
+
+      - name: Point Gradle to Android SDK
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x android/gradlew
+
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+
+      - name: Build signed release APK
+        run: cd android && ./gradlew assembleRelease --no-daemon
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS:         ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:      ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyfit-v${{ github.event.inputs.version }}.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 90
+
+  # ── Signed iOS IPA for TestFlight / App Store ─────────────────────────────
+  ios-release:
+    name: iOS Signed IPA
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Sync Capacitor → iOS
+        run: npx cap sync ios
+
+      - name: Resolve Swift Package dependencies
+        run: |
+          cd ios/App
+          xcodebuild -resolvePackageDependencies \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -clonedSourcePackagesDirPath SourcePackages
+
+      - name: Import Apple certificate
+        run: |
+          echo "${{ secrets.APPLE_CERTIFICATE_BASE64 }}" | base64 -d > certificate.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain \
+            -P "${{ secrets.APPLE_CERTIFICATE_PASSWORD }}" \
+            -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      - name: Install provisioning profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}" | base64 -d \
+            > ~/Library/MobileDevice/Provisioning\ Profiles/skyfit.mobileprovision
+
+      - name: Build and archive
+        run: |
+          cd ios/App
+          xcodebuild archive \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath SkyFit.xcarchive \
+            -clonedSourcePackagesDirPath SourcePackages \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.APPLE_PROVISIONING_PROFILE_NAME }}" \
+            | xcpretty || true
+
+      - name: Export IPA
+        run: |
+          cd ios/App
+          xcodebuild -exportArchive \
+            -archivePath SkyFit.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath SkyFit-export
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyfit-v${{ github.event.inputs.version }}.ipa
+          path: ios/App/SkyFit-export/
+          retention-days: 90

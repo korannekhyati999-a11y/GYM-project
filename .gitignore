@@ -12,6 +12,26 @@ dist
 dist-ssr
 *.local
 
+# Claude Code internal files
+.agents/
+skills-lock.json
+
+# Environment — never commit real keys
+.env
+.env.local
+.env.production
+
+# Android signing — never commit the keystore
+android/app/release.keystore
+android/app/*.jks
+android/local.properties
+
+# iOS build artefacts
+ios/App/build/
+ios/App/*.xcarchive
+ios/App/SkyFit.ipa/
+ios/App/SourcePackages/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

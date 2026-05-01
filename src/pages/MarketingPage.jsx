@@ -1,427 +1,633 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Activity, Users, ArrowRight, ChevronRight, Play, Dumbbell, Flame, HeartPulse, Timer, Target, Zap } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  Dumbbell, Activity, Users, ArrowRight, Play,
+  MapPin, Phone, Zap, Target, Timer, ChevronRight,
+  HeartPulse, Star, Award, Share2, Globe, Sun, Moon
+} from 'lucide-react';
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
+} from 'recharts';
 import '../Marketing.css';
 
-gsap.registerPlugin(ScrollTrigger);
-
 const trafficData = [
-  { time: '6 AM', count: 20 },
-  { time: '9 AM', count: 45 },
-  { time: '12 PM', count: 30 },
-  { time: '3 PM', count: 25 },
-  { time: '6 PM', count: 85 },
-  { time: '9 PM', count: 40 },
+  { time: '6 AM', count: 22 },
+  { time: '9 AM', count: 48 },
+  { time: '12 PM', count: 32 },
+  { time: '3 PM', count: 28 },
+  { time: '6 PM', count: 90 },
+  { time: '9 PM', count: 38 },
 ];
 
-const pricingTiers = [
-  { id: 1, name: 'Foundation', price: '$49/mo' },
-  { id: 2, name: 'Performance', price: '$89/mo' },
-  { id: 3, name: 'Iron Elite', price: '$129/mo' },
-  { id: 4, name: 'Apex Predator', price: '$199/mo' },
-];
-
-const muscleData = [
-  { id: 'chest', name: 'Chest / Push', desc: 'Precision Benches, Incline Racks, Isolation Flys', img: '/images/media__1775286648989.jpg' },
-  { id: 'back', name: 'Back / Pull', desc: 'Heavy Rows, Lat Pulldowns, Deadlift Platforms', img: '/images/media__1775286649010.jpg' },
-  { id: 'legs', name: 'Legs / Core', desc: 'Elite Squat Racks, Leg Presses, Glute Drives', img: '/images/media__1775286648896.jpg' },
-  { id: 'cardio', name: 'Cardio Matrix', desc: 'Speed Treadmills, Climbmills, Air Bikes', img: '/images/media__1775286648656.jpg' }
+const programs = [
+  {
+    tag: 'Strength',
+    title: 'Iron Zone',
+    desc: 'Power racks, barbells and elite free weight zones engineered for maximum output.',
+    img: '/images/media__1775286648896.jpg',
+    num: '01',
+  },
+  {
+    tag: 'Cardio',
+    title: 'Cardio Matrix',
+    desc: 'Speed treadmills, climbmills, air bikes and smart ellipticals for peak endurance.',
+    img: '/images/media__1775286648989.jpg',
+    num: '02',
+  },
+  {
+    tag: 'Flexibility',
+    title: 'Yoga & Core',
+    desc: 'Dedicated studio for Yoga, Zumba, and deep mobility recovery sessions.',
+    img: '/images/media__1775286649087.jpg',
+    num: '03',
+  },
 ];
 
 const MarketingPage = () => {
-  const heroRef = useRef(null);
-  const equipRef = useRef(null);
-  const chartRef = useRef(null);
-  
-  const [selectedTier, setSelectedTier] = useState(1);
-  const [activeMuscle, setActiveMuscle] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('skyfit-theme');
+    return saved ? saved === 'dark' : true; // default dark
+  });
+
+  // Apply theme to document and persist
+  useEffect(() => {
+    const theme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', isDark ? '' : 'light');
+    localStorage.setItem('skyfit-theme', theme);
+  }, [isDark]);
+
+  // Restore on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('skyfit-theme');
+    if (saved === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      setIsDark(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let isScrolling;
-    const handleScroll = () => {
-      const nav = document.querySelector('.navbar');
-      if (nav) {
-        if (window.scrollY > 50) {
-          nav.classList.add('scrolled');
-        } else {
-          nav.classList.remove('scrolled');
-        }
-      }
-
-      const runner = document.querySelector('.treadmill-runner');
-      const belt = document.querySelector('.treadmill-belt-inner');
-      if (runner && belt) {
-         runner.style.animationPlayState = 'running';
-         belt.style.animationPlayState = 'running';
-      }
-      
-      clearTimeout(isScrolling);
-      isScrolling = setTimeout(() => {
-         if (runner && belt) {
-           runner.style.animationPlayState = 'paused';
-           belt.style.animationPlayState = 'paused';
-         }
-      }, 150);
-    };
-    window.addEventListener('scroll', handleScroll);
-
-    // Chalk Dust Particle Effect for Bento Grids
-    const handleChalkDust = (e) => {
-      if (Math.random() > 0.85) {
-        const particle = document.createElement('div');
-        particle.className = 'chalk-particle';
-        particle.style.left = `${e.clientX}px`;
-        particle.style.top = `${e.clientY + window.scrollY}px`;
-        particle.style.setProperty('--tx', `${(Math.random() - 0.5) * 60}px`);
-        particle.style.setProperty('--ty', `${-Math.random() * 80 - 20}px`);
-        document.body.appendChild(particle);
-        setTimeout(() => particle.remove(), 1000);
-      }
-    };
-
-    window.addEventListener('mousemove', handleChalkDust);
-
-    const ctx = gsap.context(() => {
-      gsap.from('.hero-title-line', { y: 120, opacity: 0, duration: 1.5, stagger: 0.15, ease: 'power4.out', delay: 0.2 });
-      gsap.from('.hero-subtitle', { y: 40, opacity: 0, duration: 1.2, ease: 'power3.out', delay: 0.8 });
-      gsap.from('.hero-action', { y: 30, opacity: 0, duration: 1, stagger: 0.15, ease: 'power3.out', delay: 1.1 });
-
-      gsap.from('.iron-stat-block', {
-        scrollTrigger: { trigger: '.iron-stats-section', start: 'top 85%' },
-        y: 50, opacity: 0, duration: 1, stagger: 0.15, ease: 'back.out(1.7)'
-      });
-
-      gsap.from('.bento-item', {
-        scrollTrigger: { trigger: '.bento-grid', start: 'top 80%' },
-        y: 80, opacity: 0, rotationX: 10, duration: 1.2, stagger: 0.15, ease: 'power3.out'
-      });
-    }, [heroRef, equipRef, chartRef]);
-
-    // 3D Tilt Effect
-    const handleMouseMove = (e) => {
-      const items = document.querySelectorAll('.bento-item');
-      items.forEach(item => {
-        const rect = item.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotateX = ((y - centerY) / centerY) * -10;
-        const rotateY = ((x - centerX) / centerX) * 10;
-        gsap.to(item, { rotationX: rotateX, rotationY: rotateY, transformPerspective: 1500, ease: 'power2.out', duration: 0.5 });
-      });
-    };
-    const handleMouseLeave = () => {
-      const items = document.querySelectorAll('.bento-item');
-      items.forEach(item => {
-        gsap.to(item, { rotationX: 0, rotationY: 0, ease: 'power2.out', duration: 0.8 });
-      });
-    };
-
-    const grid = document.querySelector('.bento-grid');
-    if(grid){
-      grid.addEventListener('mousemove', handleMouseMove);
-      grid.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    return () => {
-      ctx.revert();
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('mousemove', handleChalkDust);
-      if(grid){
-        grid.removeEventListener('mousemove', handleMouseMove);
-        grid.removeEventListener('mouseleave', handleMouseLeave);
-      }
-    };
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const toggleTheme = () => setIsDark(prev => !prev);
 
   return (
     <div className="marketing-wrapper">
-      <div className="noise-overlay"></div>
-      <div className="aurora-container">
-        <div className="aurora-blob blob-1"></div>
-        <div className="aurora-blob blob-2"></div>
-        <div className="aurora-blob blob-3"></div>
-      </div>
 
-      <div className="treadmill-container">
-        <div className="treadmill-runner">🏃‍♂️</div>
-        <div className="treadmill-belt">
-          <div className="treadmill-belt-inner"></div>
-        </div>
-      </div>
-
-      <Dumbbell className="floating-gym-icon dumbbell-left" size={180} strokeWidth={1} />
-      <Flame className="floating-gym-icon flame-right" size={200} strokeWidth={1} />
-      
-      <div className="bg-watermark left">LIFT</div>
-      <div className="bg-watermark right">GRIND</div>
-
-      <nav className="navbar">
+      {/* ── NAVBAR ── */}
+      <nav className={`golds-navbar${scrolled ? ' scrolled' : ''}`}>
         <div className="container nav-container">
-          <div className="logo"><span className="text-accent">SKY</span>FIT</div>
+          <div className="golds-logo">
+            <span className="logo-gold">SKY</span>FIT
+          </div>
           <div className="nav-links">
             <a href="#about">About</a>
+            <a href="#programs">Programs</a>
             <a href="#equipment">Equipment</a>
-            <a href="#trainers">Join</a>
-            <Link to="/client" className="text-gradient">Member Login</Link>
+            <a href="#trainers">Trainers</a>
+            <a href="#nutrition">Nutrition</a>
+            <a href="#location">Locations</a>
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <a href="/admin" className="nav-join-btn" style={{background: 'transparent', border: '1px solid var(--gold)', color: 'var(--gold)'}}>Admin Portal</a>
+            <a href="#join" className="nav-join-btn">Join Now</a>
           </div>
         </div>
       </nav>
 
-      <section className="hero-section" ref={heroRef}>
-        <div className="hero-overlay"></div>
-        <img src="/images/media__1775286648656.jpg" alt="Gym Background" className="hero-bg-video"/>
-        <div className="container relative">
+      {/* ── HERO ── */}
+      <section className="hero-section">
+        <div
+          className="hero-bg"
+          style={{ backgroundImage: "url('/images/gym_hero_bg.png')" }}
+        />
+        <div className="hero-bg-overlay" />
+        <div className="container">
           <div className="hero-content">
+            <div className="hero-badge">
+              <Star size={14} fill="currentColor" />
+              Est. 2022 · Ujjain's Premier Gym
+            </div>
             <h1 className="hero-title">
-              <span className="hero-title-line">Redefine</span>
-              <span className="hero-title-line text-gradient-primary">Your Limits.</span>
+              Rise.<br />
+              <span className="line-gold">Train.</span><br />
+              Conquer.
             </h1>
             <p className="hero-subtitle">
-              Experience the pinnacle of fitness with elite iron, immersive environments, and world-class trainers dedicated to your absolute evolution.
+              Ujjain's most elite fitness experience. Expert coaching, pro-grade equipment, and a community built to push you beyond your limits — every single day.
             </p>
-            <div className="flex gap-6">
-              <a href="#register" className="btn btn-primary hero-action">Join Now <ArrowRight size={18} /></a>
-              <a href="#tour" className="btn btn-outline hero-action"><Play size={18} /> Watch Video</a>
+            <div className="hero-actions">
+              <a href="#join" className="btn btn-gold">
+                Join Now <ArrowRight size={18} />
+              </a>
+              <a href="#programs" className="btn btn-outline-gold">
+                <Play size={18} /> Explore Programs
+              </a>
             </div>
           </div>
         </div>
+        <div className="hero-scroll-line">
+          <span>Scroll</span>
+          <div className="scroll-dot" />
+        </div>
       </section>
 
-      <div className="marquee-container">
-        <div className="marquee-content">
-          <span>STRENGTH • ENDURANCE • DISCIPLINE • POWER • FOCUS • AGILITY • HUSTLE • COMMITMENT •</span>
-          <span>STRENGTH • ENDURANCE • DISCIPLINE • POWER • FOCUS • AGILITY • HUSTLE • COMMITMENT •</span>
+      {/* ── MARQUEE ── */}
+      <div className="marquee-bar">
+        <div className="marquee-track">
+          {[...Array(2)].map((_, i) => (
+            <span key={i}>
+              STRENGTH <span className="marquee-dot">•</span>{' '}
+              ENDURANCE <span className="marquee-dot">•</span>{' '}
+              DISCIPLINE <span className="marquee-dot">•</span>{' '}
+              POWER <span className="marquee-dot">•</span>{' '}
+              FOCUS <span className="marquee-dot">•</span>{' '}
+              LEGACY <span className="marquee-dot">•</span>{' '}
+              HUSTLE <span className="marquee-dot">•</span>{' '}
+              COMMITMENT <span className="marquee-dot">•</span>{' '}
+            </span>
+          ))}
         </div>
       </div>
 
-      <section className="iron-stats-section">
+      {/* ── STATS ── */}
+      <section className="stats-section">
         <div className="container">
-          <div className="iron-stats-grid">
-            <div className="iron-stat-block">
-              <div className="iron-stat-number">120K</div>
-              <div className="iron-stat-label">Lbs Lifted Daily</div>
+          <div className="stats-grid">
+            {[
+              { num: '5K+', label: 'Active Members' },
+              { num: '50+', label: 'Elite Equipment' },
+              { num: '24/7', label: 'Open Access' },
+              { num: '15+', label: 'Expert Trainers' },
+            ].map((s, i) => (
+              <div className="stat-item" key={i}>
+                <span className="stat-number">{s.num}</span>
+                <span className="stat-label">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="gold-divider" />
+
+      {/* ── ABOUT ── */}
+      <section id="about" className="section about-section">
+        <div className="container">
+          <div className="about-grid">
+            <div className="about-img-stack">
+              <img src="/images/media__1775286648656.jpg" alt="SkyFit Gym" className="about-main-img" />
+              <div className="about-accent-box">
+                <span className="num">3+</span>
+                <span className="lbl">Years of Excellence</span>
+              </div>
             </div>
-            <div className="iron-stat-block">
-              <div className="iron-stat-number">50+</div>
-              <div className="iron-stat-label">Elite Racks</div>
-            </div>
-            <div className="iron-stat-block">
-              <div className="iron-stat-number">24/7</div>
-              <div className="iron-stat-label">Absolute Access</div>
+            <div>
+              <span className="section-eyebrow">Our Story</span>
+              <div className="gold-line" />
+              <h2 className="section-title">Forged Since <span className="text-gold">2022</span></h2>
+              <p className="section-subtitle">
+                SkyFit was built to be more than a gym — it's a culture. From elite strength training to expert nutrition counseling, we engineer programs around your biology to forge the ultimate version of yourself.
+              </p>
+              <div className="about-info-list">
+                <div className="about-info-item">
+                  <div className="about-info-icon"><Activity size={22} /></div>
+                  <div>
+                    <h4>Programs</h4>
+                    <p>Zumba, CrossFit, Yoga, Weight Training, Weight Management</p>
+                  </div>
+                </div>
+                <div className="about-info-item">
+                  <div className="about-info-icon"><MapPin size={22} /></div>
+                  <div>
+                    <h4>Rishi Nagar — Main Branch</h4>
+                    <p>2nd Floor, Shivansh, near Rishi Nagar petrol pump, Dewas Road, Ujjain</p>
+                  </div>
+                </div>
+                <div className="about-info-item">
+                  <div className="about-info-icon"><MapPin size={22} /></div>
+                  <div>
+                    <h4>Nai Sadak Branch</h4>
+                    <p>Siti Skyfit, Nai Sadak, Ujjain</p>
+                  </div>
+                </div>
+                <div className="about-info-item">
+                  <div className="about-info-icon"><Phone size={22} /></div>
+                  <div>
+                    <h4>Contact</h4>
+                    <p>+91 62620 99920 &nbsp;|&nbsp; +91 62620 87800</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* NEW KNURLED DIVIDER */}
-      <hr className="knurled-bar" />
+      <div className="gold-divider" />
 
-      <section id="equipment" className="section" ref={equipRef}>
+      {/* ── PROGRAMS ── */}
+      <section id="programs" className="section programs-section">
         <div className="container">
-          <h2 className="section-title">Elite <span className="text-accent">Arsenal</span></h2>
-          <p className="text-secondary" style={{ marginBottom: '40px', maxWidth: '600px' }}>
-            Hover over our equipment zones. Feel the grip. (Look close—you might just kick up some chalk).
+          <span className="section-eyebrow text-center" style={{ display: 'block', textAlign: 'center' }}>What We Offer</span>
+          <div className="gold-line centered" />
+          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '16px' }}>
+            Elite <span className="text-gold">Programs</span>
+          </h2>
+          <p className="section-subtitle" style={{ textAlign: 'center', margin: '0 auto 56px' }}>
+            Every discipline. Every goal. Under one roof designed for champions.
+          </p>
+          <div className="programs-grid">
+            {programs.map((p, i) => (
+              <div className="program-card" key={i}>
+                <img src={p.img} alt={p.title} />
+                <div className="program-overlay">
+                  <div className="program-number">{p.num}</div>
+                  <span className="program-tag">{p.tag}</span>
+                  <h3 className="program-title">{p.title}</h3>
+                  <p className="program-desc">{p.desc}</p>
+                  <span className="program-link">
+                    Learn More <ChevronRight size={16} />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="gold-divider" />
+
+      {/* ── EQUIPMENT BENTO ── */}
+      <section id="equipment" className="section equipment-section">
+        <div className="container">
+          <span className="section-eyebrow">Our Facility</span>
+          <div className="gold-line" />
+          <h2 className="section-title">Elite <span className="text-gold">Arsenal</span></h2>
+          <p className="section-subtitle">
+            Hover over our zones. Premium urethane dumbbells, biomechanical machines, and next-gen cardio waiting for you.
           </p>
           <div className="bento-grid">
-            <div className="bento-item glowing-border bento-item-large">
-              <div className="bento-inner">
-                <img src="/images/media__1775286648896.jpg" className="bento-bg" alt="Cardio" />
-                <div className="bento-overlay">
-                  <h3 className="bento-title">Cardio Matrix</h3>
-                  <p className="bento-desc">Next-gen treadmills and ellipticals with immersive metric displays and auto-adjusting resistance.</p>
-                </div>
+            <div className="bento-item bento-span-2 bento-row-2">
+              <img src="/images/media__1775286648896.jpg" alt="Cardio" />
+              <div className="bento-gold-tag">Featured</div>
+              <div className="bento-overlay">
+                <div className="bento-label">Cardio Matrix</div>
+                <div className="bento-sub">Speed treadmills, climbmills, air bikes with immersive metric displays</div>
               </div>
             </div>
-            
-            <div className="bento-item glowing-border bento-item-tall">
-              <div className="bento-inner">
-                <img src="/images/media__1775286648989.jpg" className="bento-bg" alt="Free Weights" />
-                <div className="bento-overlay">
-                  <h3 className="bento-title">Iron Zone</h3>
-                  <p className="bento-desc">Premium urethane dumbbells, kettlebells, and precision lifting combo platforms.</p>
-                </div>
+            <div className="bento-item">
+              <img src="/images/media__1775286648989.jpg" alt="Iron Zone" />
+              <div className="bento-overlay">
+                <div className="bento-label">Iron Zone</div>
+                <div className="bento-sub">Premium urethane dumbbells & platforms</div>
               </div>
             </div>
-            
-            <div className="bento-item glowing-border">
-              <div className="bento-inner">
-                <img src="/images/media__1775286649010.jpg" className="bento-bg" alt="Machines" />
-                <div className="bento-overlay">
-                  <h3 className="bento-title">Machines</h3>
-                  <p className="bento-desc">Biomechanically flawless isolation tracking for exact targeting.</p>
-                </div>
+            <div className="bento-item">
+              <img src="/images/media__1775286649010.jpg" alt="Machines" />
+              <div className="bento-overlay">
+                <div className="bento-label">Machines</div>
+                <div className="bento-sub">Biomechanically precise isolation</div>
               </div>
             </div>
-            
-            <div className="bento-item glowing-border bento-item-wide">
-              <div className="bento-inner">
-                <img src="/images/media__1775286648656.jpg" className="bento-bg" alt="Recovery" />
-                <div className="bento-overlay">
-                  <h3 className="bento-title">Recovery Lounge</h3>
-                  <p className="bento-desc">Optimize your healing with hydrotherapy and advanced massage tools. Peak performance requires peak recovery.</p>
-                </div>
+            <div className="bento-item bento-span-2">
+              <img src="/images/media__1775286648656.jpg" alt="Recovery" />
+              <div className="bento-overlay">
+                <div className="bento-label">Recovery Lounge</div>
+                <div className="bento-sub">Peak performance requires peak recovery — hydrotherapy & massage tools</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* NEW MUSCLE MAP SECTION */}
-      <section className="section">
+      <div className="gold-divider" />
+
+      {/* ── TEAM PHOTO BANNER ── */}
+      <section className="team-photo-section">
+        <img src="/images/team.jpg" alt="SkyFit Coaching Team" />
+        <div className="team-photo-overlay">
+          <div className="team-photo-text">
+            <span className="section-eyebrow">The Professionals</span>
+            <div className="gold-line" />
+            <h2>World-Class <span className="text-gold">Coaching</span></h2>
+            <p>
+              Our trainers don't just guide — they transform. From form corrections to custom programming, every session is engineered for your success.
+            </p>
+            <a href="#trainers" className="btn btn-gold">Meet the Team <ArrowRight size={18} /></a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TRAINERS ── */}
+      <section id="trainers" className="section trainers-section">
         <div className="container">
-          <h2 className="section-title">Anatomy of <span className="text-accent">Elite Training</span></h2>
-          <div className="muscle-map-container">
-            <div className="muscle-nodes">
-              {muscleData.map((muscle, idx) => (
-                <div 
-                  key={muscle.id} 
-                  className={`muscle-node ${activeMuscle === idx ? 'active' : ''}`}
-                  onMouseEnter={() => setActiveMuscle(idx)}
-                >
-                  <Target size={24} color={activeMuscle === idx ? "#FF2020" : "#555"} />
-                  <div>
-                    <h4>{muscle.name}</h4>
-                    <p>{muscle.desc.substring(0, 30)}...</p>
+          <span className="section-eyebrow" style={{ display: 'block', textAlign: 'center' }}>Coaching Staff</span>
+          <div className="gold-line centered" />
+          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '56px' }}>
+            Elite <span className="text-gold">Trainers</span>
+          </h2>
+          <div className="trainers-grid">
+            <div className="trainer-card">
+              <div className="trainer-img-wrap">
+                <img src="/images/general_trainer.png" alt="Floor Coaches" />
+                <span className="trainer-badge">Group Coaching</span>
+              </div>
+              <div className="trainer-body">
+                <h3 className="trainer-name">Floor Command</h3>
+                <p className="trainer-role">Group & General Coaching</p>
+                <p className="trainer-bio">
+                  Our general trainers dominate the floor, offering form corrections, high-energy group sessions, and unyielding motivation perfect for a communal, intense environment.
+                </p>
+                <ul className="trainer-features">
+                  <li><Target size={15} /> Accessible 24/7 on the floor</li>
+                  <li><Users size={15} /> Group conditioning classes</li>
+                  <li><Zap size={15} /> Form checks & spotting</li>
+                </ul>
+              </div>
+            </div>
+            <div className="trainer-card">
+              <div className="trainer-img-wrap">
+                <img src="/images/personal_trainer.png" alt="Personal Trainer" />
+                <span className="trainer-badge">Personal Training</span>
+              </div>
+              <div className="trainer-body">
+                <h3 className="trainer-name">Elite 1-on-1</h3>
+                <p className="trainer-role">Dedicated Personal Training</p>
+                <p className="trainer-bio">
+                  Access bespoke training programs engineered specifically for your biology and goals. Your trainer tracks macros, forces progression, and ensures zero wasted effort.
+                </p>
+                <ul className="trainer-features">
+                  <li><Target size={15} /> Custom tactical programming</li>
+                  <li><HeartPulse size={15} /> Advanced biometric tracking</li>
+                  <li><Award size={15} /> Absolute accountability</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="gold-divider" />
+
+      {/* ── NUTRITION ── */}
+      <section id="nutrition" className="section nutrition-section">
+        <div className="container">
+          <div className="nutrition-grid">
+            <div className="nutrition-img-wrap">
+              <img src="/images/nut.png" alt="Nutrition" />
+              <div className="nutrition-tag">Elite Nutrition</div>
+            </div>
+            <div>
+              <span className="section-eyebrow">Fuel Your Performance</span>
+              <div className="gold-line" />
+              <h2 className="section-title">Apex <span className="text-gold">Diet</span> Matrix</h2>
+              <p className="section-subtitle">
+                Training without optimal fuel is wasted effort. Our elite in-house sports dietician analyzes your biometrics and lifestyle to forge a nutrition protocol that guarantees relentless progression.
+              </p>
+              <div className="diet-cards">
+                {[
+                  { title: 'Pre-Workout', desc: 'Fast-acting carbs, complete aminos, vaso-dilators.' },
+                  { title: 'Intra-Workout', desc: 'Electrolytes, BCAAs, cyclic dextrin to sustain ATP.' },
+                  { title: 'Post-Workout', desc: 'Whey isolate, leucine spike, rapid glycogen replenishment.' },
+                  { title: 'Recovery Phase', desc: 'Casein, slow-digesting complex carbs, omega-3s.' },
+                ].map((d, i) => (
+                  <div className="diet-card" key={i}>
+                    <h5>{d.title}</h5>
+                    <p>{d.desc}</p>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="gold-divider" />
+
+      {/* ── SMART TIMINGS ── */}
+      <section className="section timing-section">
+        <div className="container">
+          <div className="timing-grid">
+            <div>
+              <span className="section-eyebrow">Train Smarter</span>
+              <div className="gold-line" />
+              <h2 className="section-title">Smart <span className="text-gold">Timings</span></h2>
+              <p className="section-subtitle">
+                Don't guess when to train. Our crowd insights help you time your sessions perfectly — avoid the rush or dive in during core iron hours.
+              </p>
+              <div className="insight-card">
+                <div className="insight-icon"><Dumbbell size={24} /></div>
+                <div>
+                  <h4>Peak Iron Hours</h4>
+                  <span>5:00 PM – 8:00 PM</span>
+                </div>
+              </div>
+              <div className="insight-card">
+                <div className="insight-icon"><Timer size={24} /></div>
+                <div>
+                  <h4>Deep Focus Hours</h4>
+                  <span>11:00 AM – 3:00 PM</span>
+                </div>
+              </div>
+              <div className="insight-card">
+                <div className="insight-icon"><Activity size={24} /></div>
+                <div>
+                  <h4>Morning Session</h4>
+                  <span>6:00 AM – 8:00 AM</span>
+                </div>
+              </div>
+            </div>
+            <div className="chart-wrap">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trafficData}>
+                  <defs>
+                    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#C9A84C" stopOpacity={0.5} />
+                      <stop offset="100%" stopColor="#C9A84C" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="time" stroke="#444" tick={{ fill: '#888', fontSize: 13 }} axisLine={false} tickLine={false} dy={10} />
+                  <YAxis stroke="#444" tick={{ fill: '#888', fontSize: 13 }} axisLine={false} tickLine={false} dx={-10} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#161616', border: '1px solid #252525', borderRadius: '8px', color: '#fff' }}
+                    itemStyle={{ color: '#C9A84C', fontWeight: '700' }}
+                    cursor={{ stroke: 'rgba(201,168,76,0.3)', strokeWidth: 2 }}
+                  />
+                  <Area type="monotone" dataKey="count" stroke="#C9A84C" strokeWidth={3} fillOpacity={1} fill="url(#goldGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="gold-divider" />
+
+      {/* ── APP PROMO ── */}
+      <section id="app" className="section app-section">
+        <div className="container">
+          <div className="app-promo-card">
+            <div className="app-promo-left">
+              <span className="section-eyebrow">Go Mobile</span>
+              <div className="gold-line" />
+              <h2 className="section-title">Carry the <span className="text-gold">Iron</span> With You</h2>
+              <p className="section-subtitle" style={{ marginBottom: '8px' }}>
+                Total domination in your pocket. Live tracking, 3D bio-sync, macro logging, and direct trainer chats.
+              </p>
+              <ul className="app-features-list">
+                <li className="app-feature-item"><Activity size={18} /> Live gym crowd tracker</li>
+                <li className="app-feature-item"><Zap size={18} /> Real-time bio-sync dashboard</li>
+                <li className="app-feature-item"><Dumbbell size={18} /> Custom workout programs</li>
+                <li className="app-feature-item"><Users size={18} /> 1-on-1 trainer messaging</li>
+              </ul>
+              <div className="app-store-btns">
+                <button className="btn btn-gold" style={{ gap: '10px' }}>
+                  <svg viewBox="0 0 384 512" width="18" height="18" fill="currentColor">
+                    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
+                  </svg>
+                  App Store
+                </button>
+                <button className="btn btn-outline-gold" style={{ gap: '10px' }}>
+                  <Play size={18} /> Google Play
+                </button>
+              </div>
+            </div>
+            <div className="app-promo-right">
+              <img src="/images/mobile_app_mockup.png" alt="SkyFit App" className="app-mockup" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="gold-divider" />
+
+      {/* ── LOCATION ── */}
+      <section id="location" className="section map-section">
+        <div className="container">
+          <span className="section-eyebrow" style={{ display: 'block', textAlign: 'center' }}>Find Us</span>
+          <div className="gold-line centered" />
+          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '56px' }}>
+            Our <span className="text-gold">Locations</span>
+          </h2>
+          <div className="map-grid">
+            <div className="map-iframe-wrap">
+              <iframe
+                width="100%" height="100%"
+                style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) grayscale(60%) brightness(0.8)' }}
+                src="https://maps.google.com/maps?q=Skyfit%20Gym,%20Ujjain&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                title="SkyFit Location"
+                frameBorder="0" scrolling="no"
+              />
+            </div>
+            <div className="location-cards">
+              {[
+                {
+                  branch: 'Rishi Nagar — Main Branch',
+                  addr: '2nd Floor, Shivansh, near Rishi Nagar petrol pump, Dewas Road, Ujjain - 456010',
+                  hours: 'Open Daily · until 10 PM',
+                },
+                {
+                  branch: 'Nai Sadak Branch',
+                  addr: 'Siti Skyfit, Nai Sadak, Ujjain',
+                  hours: 'Open Daily · until 10 PM',
+                },
+                {
+                  branch: 'Direct Contact',
+                  addr: '+91 62620 99920   |   +91 62620 87800',
+                  hours: null,
+                },
+              ].map((loc, i) => (
+                <div className="location-card" key={i}>
+                  <h4>{loc.branch}</h4>
+                  <p>{loc.addr}</p>
+                  {loc.hours && <p className="hours">{loc.hours}</p>}
                 </div>
               ))}
             </div>
-            <div className="muscle-display">
-              <img 
-                src={muscleData[activeMuscle].img} 
-                className="muscle-display-image" 
-                key={muscleData[activeMuscle].img}
-                alt={muscleData[activeMuscle].name} 
-              />
-              <div className="muscle-display-overlay">
-                <h3>{muscleData[activeMuscle].name}</h3>
-                <p><Zap size={16} style={{display:'inline', marginRight:'5px'}}/> {muscleData[activeMuscle].desc}</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      <hr className="knurled-bar" />
-
-      {/* Live Crowd Analysis */}
-      <section className="section" style={{ position: 'relative', zIndex: 3 }}>
-        <div className="container" ref={chartRef}>
-          <div className="chart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center' }}>
-            <div>
-              <h2 className="section-title" style={{ textAlign: 'left', marginBottom: '1.5rem', fontSize: '3.5rem' }}>Smart <span className="text-accent">Timings</span></h2>
-              <p className="text-secondary" style={{ marginBottom: '3rem', fontSize: '1.15rem', maxWidth: '85%' }}>
-                Don't guess when to train. Our live-feel traffic analysis helps you perfectly time your flow—avoid the rush or dive into the core iron club hours.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '80%' }}>
-                <div className="insight-card">
-                  <div className="insight-icon primary"><Dumbbell size={26} /></div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '1.3rem', color: '#fff' }}>Peak Iron Hours</h4>
-                    <span className="text-secondary" style={{ fontSize: '1rem' }}>5:00 PM - 8:00 PM</span>
-                  </div>
-                </div>
-                <div className="insight-card">
-                  <div className="insight-icon secondary"><Timer size={26} /></div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '1.3rem', color: '#fff' }}>Deep Focus Hours</h4>
-                    <span className="text-secondary" style={{ fontSize: '1rem' }}>11:00 AM - 3:00 PM</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="glowing-border always-on" style={{ height: '500px', width: '100%', borderRadius: 'var(--border-radius)' }}>
-              <div className="glass-panel chart-container" style={{ height: '100%', border: 'none' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trafficData}>
-                    <defs>
-                      <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.8}/>
-                        <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="time" stroke="#71717A" tick={{ fill: '#A1A1AA', fontSize: 13 }} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis stroke="#71717A" tick={{ fill: '#A1A1AA', fontSize: 13 }} axisLine={false} tickLine={false} dx={-10} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'rgba(5, 5, 5, 0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
-                      itemStyle={{ color: '#FF2020', fontWeight: '800', fontSize: '1.1rem' }}
-                      cursor={{ stroke: 'rgba(255, 32, 32, 0.3)', strokeWidth: 2, strokeDasharray: '4 4' }}
-                    />
-                    <Area type="monotone" dataKey="count" stroke="var(--primary)" strokeWidth={5} fillOpacity={1} fill="url(#colorCount)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+      {/* ── JOIN CTA ── */}
+      <section id="join" className="section cta-join-section" style={{ background: isDark ? 'linear-gradient(135deg, #111 0%, #1a1400 50%, #111 100%)' : 'linear-gradient(135deg,#f5f0e0 0%,#fdf8e8 50%,#f5f0e0 100%)', borderTop: '1px solid rgba(201,168,76,0.2)' }}>
+        <div className="container" style={{ textAlign: 'center' }}>
+          <span className="section-eyebrow" style={{ display: 'block', textAlign: 'center' }}>Start Today</span>
+          <div className="gold-line centered" />
+          <h2 className="section-title" style={{ fontSize: '5rem', marginBottom: '20px' }}>
+            Become a <span className="text-gold">Legend</span>
+          </h2>
+          <p className="section-subtitle" style={{ margin: '0 auto 48px', textAlign: 'center' }}>
+            The first step is the hardest. Take it now. Your strongest self is waiting inside.
+          </p>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href="tel:+916262099920" className="btn btn-gold" style={{ fontSize: '1.05rem' }}>
+              <Phone size={18} /> Call to Join — Free Trial
+            </a>
+            <a href="#location" className="btn btn-outline-gold" style={{ fontSize: '1.05rem' }}>
+              <MapPin size={18} /> Find a Location
+            </a>
           </div>
         </div>
       </section>
 
-      {/* NEW WEIGHT STACK PRICING */}
-      <section className="section" style={{ background: '#080808' }}>
+      {/* ── FOOTER ── */}
+      <footer className="golds-footer">
         <div className="container">
-          <h2 className="section-title text-center">Select Your <span className="text-accent">Load</span></h2>
-          <p className="text-secondary text-center" style={{ marginBottom: '40px' }}>Slide the pin to set your membership tier.</p>
-          <div className="weight-stack-container">
-            <div className="weight-stack glowing-border always-on">
-              {pricingTiers.map((tier, idx) => {
-                // If you click a weight, you get that weight and all lighter weights above it.
-                // In a cable stack, clicking the bottom lifts everything above it.
-                const isActive = idx <= selectedTier;
-                return (
-                  <div 
-                    key={tier.id} 
-                    className={`weight-plate ${isActive ? 'active' : ''}`}
-                    onClick={() => setSelectedTier(idx)}
-                  >
-                    <span className="plate-title">{tier.name}</span>
-                    <span className="plate-price">{tier.price}</span>
-                  </div>
-                );
-              })}
-              {/* Stack pin calculates vertical position based on selected index. Each plate is 80px high + 4px gap */}
-              <div 
-                className="stack-pin" 
-                style={{ top: `${(selectedTier * 84) + 40 + 10}px` }}
-              ></div>
+          <div className="footer-grid">
+            <div className="footer-brand">
+              <span className="logo-text"><span style={{ color: 'var(--gold)' }}>SKY</span>FIT</span>
+              <p>Ujjain's premier fitness destination. Building champions since 2022 through elite equipment, expert coaching, and a culture of excellence.</p>
+            </div>
+            <div className="footer-col">
+              <h4>Programs</h4>
+              <ul>
+                <li><a href="#programs">Weight Training</a></li>
+                <li><a href="#programs">CrossFit</a></li>
+                <li><a href="#programs">Yoga & Core</a></li>
+                <li><a href="#programs">Zumba</a></li>
+                <li><a href="#programs">Personal Training</a></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h4>Company</h4>
+              <ul>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#trainers">Our Trainers</a></li>
+                <li><a href="#nutrition">Nutrition</a></li>
+                <li><a href="#app">Mobile App</a></li>
+                <li><a href="#location">Locations</a></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h4>Contact</h4>
+              <ul>
+                <li><a href="tel:+916262099920">+91 62620 99920</a></li>
+                <li><a href="tel:+916262087800">+91 62620 87800</a></li>
+                <li><a href="#location">Rishi Nagar, Ujjain</a></li>
+                <li><a href="#location">Nai Sadak, Ujjain</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>© 2025 SkyFit Gym. All rights reserved. Ujjain, Madhya Pradesh, India.</p>
+            <div className="footer-social">
+              {[Share2, Globe, Share2, Globe].map((Icon, i) => (
+                <button className="social-btn" key={i}><Icon size={16} /></button>
+              ))}
             </div>
           </div>
         </div>
-      </section>
+      </footer>
 
-      <hr className="knurled-bar" />
-
-      {/* Registration */}
-      <section id="register" className="section" style={{ paddingBottom: '160px' }}>
-        <div className="container" style={{ maxWidth: '650px' }}>
-          <div className="glowing-border always-on">
-            <form className="premium-form">
-              <div style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', background: 'radial-gradient(ellipse at top, rgba(255,32,32,0.15) 0%, transparent 60%)', pointerEvents: 'none' }}></div>
-              <h2 style={{ textAlign: 'center', marginBottom: '15px', fontSize: '3rem' }} className="text-gradient">Begin Ascension</h2>
-              <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '50px', fontSize: '1.15rem' }}>The elite don't wait. Claim your ultra-premium 7-day access.</p>
-              
-              <div className="form-group">
-                <input type="text" className="form-control" placeholder="Full Legal Name" />
-              </div>
-              <div className="form-group">
-                <input type="email" className="form-control" placeholder="Secure Email Address" />
-              </div>
-              <div className="form-group">
-                <input type="tel" className="form-control" placeholder="Primary Contact Number" />
-              </div>
-              
-              <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: '20px', padding: '20px' }}>
-                Commit Now <ChevronRight size={20} />
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };
